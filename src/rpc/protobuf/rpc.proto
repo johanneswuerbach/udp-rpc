@@ -1,0 +1,34 @@
+package rpc.protobuf;
+
+option java_package = "rpc.protobuf";
+option java_outer_classname = "RPCProtocol";
+
+// RPC - Diese Nachricht dient dazu einen entfernten Methodeaufruf durchzufuehren.
+message RPCCall {
+    // Name der Klasse, in der die aufzurufende statische Methode sich befindet
+	required string classname = 1;
+	
+	// Name der aufzurufenden statischen Methode
+	required string methodname = 2;
+	
+	// Liste aller Parameter mit denen die statische Methode aufzurufen ist.
+	// Die Parameter liegen hier als serialisierte Objekte vor. 
+	repeated bytes parameters = 3;
+}
+
+// Ergebnis es RPC - Diese Nachricht dient dazu das Ergebnis eines entfernten Methodenaufrufen
+// an den Aufrufenden zurueck zu liefern.
+message RPCResult {
+	// Rueckgabewert des RPC. Diese Wert muss vorhanden sein, falls keine Exception
+	// waerend des Aufrufes aufgetreten ist. Der Rueckgabewert liegt (analog zu den 
+	// Parametern des RPC als serialisiertes Objekte vor. Falls die aufgerufende Methode
+	// keinen Rueckgabewerte hatte, so ist hier 'null' zu uebertragen
+	// (diese Verhalten wird automatisch von Method#invoke(Class<?> clazz, Object... args)
+	// gewaehrleistet.
+	optional bytes result = 1;
+	
+	// Falls waerend des RPCs ein Versagen auftritt (die Methode kann nicht gefunden werden,
+	// die Klasse kann nicht gefunden werden, die Methode wirft eine Exception) dann wird
+	// mit diesem Feld die aufgetretende Exception an den Aufrufenden zurueck geliefert.
+	optional bytes exception = 2;
+}
