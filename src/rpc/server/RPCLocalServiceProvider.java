@@ -73,11 +73,13 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 	public <R> R callexplicit(String className, String methodName,
 			Serializable[] params) throws RPCException {
 
-		System.out.println("Call: " + className + ", " + methodName);
-
 		try {
+			System.out.print("Debug: " + className + "." + methodName + "()");
 			Class<?> clazz = Class.forName(className);
 			Class<?>[] paramTypes = new Class<?>[params.length];
+			if(paramTypes.length > 0) {
+				System.out.print(" Params: -> ");
+			}
 			for (int i = 0; i < paramTypes.length; i++) {
 				if (_callPrimitivesIfBoxed) {
 					paramTypes[i] = RPCSecrets.warpToPrimitiveClass(params[i]
@@ -85,7 +87,9 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 				} else {
 					paramTypes[i] = params[i].getClass();
 				}
+				System.out.print(paramTypes[i] + " " + params[i] + " ");
 			}
+			System.out.println("");
 			Method method = clazz.getMethod(methodName, paramTypes);
 			R result = (R) method.invoke(null, (Object[]) params);
 			return result;
@@ -98,7 +102,7 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 		} catch (IllegalAccessException e) {
 			throw new RPCException(e);
 		} catch (InvocationTargetException e) {
-			throw new RPCException(e);
+			throw new RPCException(e.getCause());
 		} catch (ClassNotFoundException e) {
 			throw new RPCException(e);
 		}

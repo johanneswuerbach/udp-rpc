@@ -14,7 +14,7 @@ public class Main {
 	public static void main(String[] args) throws RPCException,
 			SocketException, UnknownHostException {
 		RPCServiceProvider local = new RPCLocalServiceProvider();
-		//		local(local);
+		local(local);
 		rpc(local);
 	}
 
@@ -83,6 +83,13 @@ public class Main {
 			int[] b = { 12, 4, 1, 3 };
 			System.out.println(remote.callsave("testpackage.Testclass",
 					"integerArrayTest", b, null));
+			
+			try {
+				System.out.println(local.call("testpackage.Testclass",
+						"myException", 1));
+			} catch (RPCException e) {
+				e.getCause().printStackTrace();
+			}
 
 			server.terminate();
 		}

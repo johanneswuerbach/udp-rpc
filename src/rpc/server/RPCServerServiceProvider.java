@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 import rpc.RPCException;
 import rpc.RPCSecrets;
@@ -35,6 +36,7 @@ public class RPCServerServiceProvider implements Runnable {
 	public RPCServerServiceProvider(RPCServiceProvider serviceProvider, int port)
 			throws SocketException {
 		_socket = new DatagramSocket(port);
+		_socket.setSoTimeout(500);
 		_running = true;
 		_serviceProvider = serviceProvider;
 		System.out.println("Starting server using port \"" + port + "\".");
@@ -49,11 +51,14 @@ public class RPCServerServiceProvider implements Runnable {
 				byte[] buffer = new byte[1024];
 				packet = new DatagramPacket(buffer, buffer.length);
 				_socket.receive(packet);
+				
 				byte[] bytes = new byte[packet.getLength()];
 				for (int i = 0; i < packet.getLength(); i++) {
 					bytes[i] = buffer[i];
 				}
 				message = RPCCall.parseFrom(bytes);
+			} catch (SocketTimeoutException e) {
+				continue;
 			} catch (IOException e) {
 				e.printStackTrace();
 				continue;
