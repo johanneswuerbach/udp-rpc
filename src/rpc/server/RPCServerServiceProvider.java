@@ -1,6 +1,7 @@
 package rpc.server;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -58,13 +59,14 @@ public class RPCServerServiceProvider implements Runnable {
 				continue;
 			}
 			try {
-				//				for (int i=0;i<message.getParametersCount();i++){
-				//					
-				//				}
-				ByteString result = RPCSecrets.serialize(_serviceProvider.call(
-						message.getClassname(), message.getMethodname(),
-						RPCSecrets.deserialize(message.getParametersList())));
-				sendResult(result, packet.getAddress(), packet.getPort());
+				Serializable[] params = (Serializable[]) RPCSecrets.deserialize(message
+						.getParametersList());
+
+				Object result = _serviceProvider.callexplicit(message.getClassname(),
+						message.getMethodname(), params);
+
+				ByteString byteResult = RPCSecrets.serialize(result);
+				sendResult(byteResult, packet.getAddress(), packet.getPort());
 			} catch (RPCException e) {
 				e.printStackTrace();
 				throwExecption(e, packet.getAddress(), packet.getPort());
