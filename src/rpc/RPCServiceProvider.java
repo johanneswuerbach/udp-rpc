@@ -33,9 +33,9 @@ public abstract class RPCServiceProvider {
 	}
 
 	/**
-	 * Aufruf einer statischen Methode; Ähnlich, wie call, allerdings muss nach
-	 * dem letzten Parameter ein "null" übergeben werden. Dies wurde eingebaut,
-	 * damit man ein einzelnes Array als Parameter übergeben kann. (Bug der
+	 * Aufruf einer statischen Methode; Ã„hnlich, wie call, allerdings muss nach
+	 * dem letzten Parameter ein "null" Ã¼bergeben werden. Dies wurde eingebaut,
+	 * damit man ein einzelnes Array als Parameter Ã¼bergeben kann. (Bug der
 	 * ...-Syntax)
 	 * 
 	 * @param classname
