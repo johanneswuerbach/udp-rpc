@@ -43,6 +43,7 @@ public class RPCRemoteServiceProvider extends RPCServiceProvider {
 		RPCResult message = null;
 		byte[] buffer = new byte[1024];
 		try {
+			packet = new DatagramPacket(buffer, buffer.length);
 			_socket.receive(packet);
 
 			byte[] bytes = new byte[packet.getLength()];

@@ -87,7 +87,8 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 				}
 			}
 			Method method = clazz.getMethod(methodName, paramTypes);
-			return (R) method.invoke(null, (Object[]) params);
+			R result = (R) method.invoke(null, (Object[]) params);
+			return result;
 		} catch (SecurityException e) {
 			throw new RPCException(e);
 		} catch (NoSuchMethodException e) {
