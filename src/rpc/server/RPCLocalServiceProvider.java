@@ -91,6 +91,7 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 			}
 			System.out.println("");
 			Method method = clazz.getMethod(methodName, paramTypes);
+			@SuppressWarnings("unchecked")
 			R result = (R) method.invoke(null, (Object[]) params);
 			return result;
 		} catch (SecurityException e) {
