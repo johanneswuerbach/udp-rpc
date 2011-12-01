@@ -25,6 +25,8 @@ public class RPCServerServiceProvider implements Runnable {
 	private DatagramSocket _socket;
 	private boolean _running;
 	private RPCServiceProvider _serviceProvider;
+	private InetAddress _clientAddress;
+	private int _clientPort;
 
 	/**
 	 * @param serviceProvider
@@ -42,21 +44,16 @@ public class RPCServerServiceProvider implements Runnable {
 		System.out.println("Starting server using port \"" + port + "\".");
 	}
 
+	/**
+	 * Waits for remote procedure calls, executes them an send the result back
+	 * to the client.
+	 */
 	@Override
 	public void run() {
 		while (_running) {
-			RPCCall message = null;
-			DatagramPacket packet = null;
+			RPCCall remoteCall = null;
 			try {
-				byte[] buffer = new byte[1024];
-				packet = new DatagramPacket(buffer, buffer.length);
-				_socket.receive(packet);
-				
-				byte[] bytes = new byte[packet.getLength()];
-				for (int i = 0; i < packet.getLength(); i++) {
-					bytes[i] = buffer[i];
-				}
-				message = RPCCall.parseFrom(bytes);
+				remoteCall = receive();
 			} catch (SocketTimeoutException e) {
 				continue;
 			} catch (IOException e) {
@@ -64,25 +61,67 @@ public class RPCServerServiceProvider implements Runnable {
 				continue;
 			}
 			try {
-				Serializable[] params = (Serializable[]) RPCSecrets.deserialize(message
-						.getParametersList());
-
-				Object result = _serviceProvider.callexplicit(message.getClassname(),
-						message.getMethodname(), params);
-
-				ByteString byteResult = RPCSecrets.serialize(result);
-				sendResult(byteResult, packet.getAddress(), packet.getPort());
+				ByteString byteResult = execute(remoteCall);
+				sendResult(byteResult, _clientAddress, _clientPort); //only if no exception was thrown remotely
 			} catch (RPCException e) {
-				e.printStackTrace();
-				throwExecption(e, packet.getAddress(), packet.getPort());
+				throwExecption(e, _clientAddress, _clientPort);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		_socket.close();
 	}
 
+	/**
+	 * Executes the remotely called procedure
+	 * 
+	 * @param remoteCall
+	 *            the remote call
+	 * @return the result as byteString
+	 * @throws ClassNotFoundException
+	 * @throws RPCException
+	 *             if the executed method throws an exception.
+	 */
+	private ByteString execute(RPCCall remoteCall)
+			throws ClassNotFoundException, RPCException {
+		Serializable[] params = (Serializable[]) RPCSecrets
+				.deserialize(remoteCall.getParametersList());
+		Object result = _serviceProvider.callexplicit(
+				remoteCall.getClassname(), remoteCall.getMethodname(), params);
+		return RPCSecrets.serialize(result);
+	}
+
+	/**
+	 * Receives a remote procedure call from a client.
+	 * 
+	 * @return the received call.
+	 * @throws IOException
+	 *             in case of socket timeout.
+	 */
+	private RPCCall receive() throws IOException {
+		byte[] buffer = new byte[1024];
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+		_socket.receive(packet);
+
+		byte[] bytes = new byte[packet.getLength()];
+		for (int i = 0; i < packet.getLength(); i++) {
+			bytes[i] = buffer[i];
+		}
+		_clientAddress = packet.getAddress();
+		_clientPort = packet.getPort();
+		return RPCCall.parseFrom(bytes);
+	}
+
+	/**
+	 * Send the result to the client.
+	 * 
+	 * @param result
+	 *            the result
+	 * @param host
+	 *            the client address
+	 * @param port
+	 *            the port
+	 */
 	private void sendResult(ByteString result, InetAddress host, int port) {
 		RPCResult.Builder builder = RPCResult.newBuilder();
 		builder.setResult(result);
@@ -97,6 +136,17 @@ public class RPCServerServiceProvider implements Runnable {
 		}
 	}
 
+	/**
+	 * Send an exception to the client. Used if an exception was thrown during
+	 * the execution of the remote called method.
+	 * 
+	 * @param e
+	 *            the exeption
+	 * @param host
+	 *            the client address
+	 * @param port
+	 *            the port
+	 */
 	private void throwExecption(RPCException e, InetAddress host, int port) {
 		RPCResult.Builder builder = RPCResult.newBuilder();
 		builder.setException(RPCSecrets.serialize(e));

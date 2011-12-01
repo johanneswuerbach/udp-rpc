@@ -72,12 +72,11 @@ public class RPCLocalServiceProvider extends RPCServiceProvider {
 	 */
 	public <R> R callexplicit(String className, String methodName,
 			Serializable[] params) throws RPCException {
-
 		try {
 			System.out.print("Debug: " + className + "." + methodName + "()");
 			Class<?> clazz = Class.forName(className);
 			Class<?>[] paramTypes = new Class<?>[params.length];
-			if(paramTypes.length > 0) {
+			if (paramTypes.length > 0) {
 				System.out.print(" Params: -> ");
 			}
 			for (int i = 0; i < paramTypes.length; i++) {
